@@ -1,3 +1,17 @@
+# Frontend
+
+This frontend uses Vue 3 + Vite.
+
+Dev:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Notes:
+- API base URL is configured in `src/services/api.js` (defaults to `http://localhost:5000`).
+- Auth helpers are in `src/services/auth.js`.
 # frontend
 
 This template should help get you started developing with Vue 3 in Vite.

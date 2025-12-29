@@ -1,140 +1,126 @@
 <template>
-  <div class="container">
-    <h1>Parking Slots</h1>
-
-    <div class="total-vehicles">
-      Total Vehicles Parked: {{ totalVehicles }}
-    </div>
-
-    <div class="slots">
-      <div
-        v-for="slot in slots"
-        :key="slot._id"
-        class="slot-card"
-        :class="slot.status.toLowerCase()"
-      >
-        <div class="slot-number">Slot {{ slot.number }}</div>
-        <div class="slot-status">Status: {{ slot.status }}</div>
-        <div class="slot-vehicle" v-if="slot.vehicle">Vehicle: {{ slot.vehicle }}</div>
-
-        <div class="slot-action">
-          <!-- FREE slot -->
-          <div v-if="slot.status === 'FREE'">
-            <input
-              v-model="vehicleInput[slot._id]"
-              placeholder="Enter vehicle no"
-            />
-            <button @click="bookSlot(slot._id)">Book</button>
-          </div>
-
-          <!-- OCCUPIED slot -->
-          <div v-else>
-            <button @click="exitSlot(slot._id)">Exit</button>
-          </div>
-        </div>
+  <div :class="[{ dark: isDark }, 'app-root']">
+    <nav class="nav">
+      <div class="nav-left">
+        <router-link to="/">Home</router-link>
+        <router-link to="/entry">Entry</router-link>
+        <router-link to="/exit">Exit</router-link>
+        <router-link to="/records">Records</router-link>
       </div>
-    </div>
+      <div class="nav-right">
+        <div class="theme-switch">
+          <input id="theme-checkbox" type="checkbox" v-model="isDark" @change="toggleTheme" />
+          <label for="theme-checkbox" class="switch-label">
+            <span class="sun">☀️</span>
+            <span class="toggle-knob" aria-hidden></span>
+            <span class="moon">🌙</span>
+          </label>
+        </div>
+        <button v-if="isLogged" class="logout-btn" @click="logout">Logout</button>
+      </div>
+    </nav>
+
+    <main class="main">
+      <router-view />
+    </main>
+    <!-- Footer removed -->
   </div>
 </template>
 
 <script>
-import axios from "axios";
+import axios from 'axios'
 
 export default {
   data() {
-    return {
-      slots: [],
-      vehicleInput: {}
-    };
+    return { isDark: false, isLogged: false, username: '' }
   },
-  computed: {
-    totalVehicles() {
-      return this.slots.filter(slot => slot.status === "OCCUPIED").length;
-    }
+  created() {
+    const saved = localStorage.getItem('theme')
+    this.isDark = saved === 'dark' || (saved === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    this.isLogged = !!localStorage.getItem('token')
+    this.username = localStorage.getItem('username') || ''
+    // listen for auth changes (other tabs or login/logout)
+    window.addEventListener('storage', this.onAuthChange)
+    window.addEventListener('auth-changed', this.onAuthChange)
+  },
+  unmounted() {
+    window.removeEventListener('storage', this.onAuthChange)
+    window.removeEventListener('auth-changed', this.onAuthChange)
   },
   methods: {
-    load() {
-      axios
-        .get("http://localhost:5000/slots")
-        .then((res) => (this.slots = res.data))
-        .catch((err) => console.log(err));
+    onAuthChange: function() {
+      this.isLogged = !!localStorage.getItem('token')
+      this.username = localStorage.getItem('username') || ''
+      // also react to theme changes from other tabs
+      const saved = localStorage.getItem('theme')
+      this.isDark = saved === 'dark'
     },
-    bookSlot(id) {
-      const vehicle = this.vehicleInput[id];
-      if (!vehicle) return alert("Enter vehicle number");
-      axios
-        .post(`http://localhost:5000/slots/book/${id}`, { vehicle })
-        .then(() => {
-          this.vehicleInput[id] = "";
-          this.load();
-        });
+    toggleTheme() {
+      // v-model already updated `isDark` on click; persist current value
+      localStorage.setItem('theme', this.isDark ? 'dark' : 'light')
+      window.dispatchEvent(new Event('theme-changed'))
     },
-    exitSlot(id) {
-      axios.post(`http://localhost:5000/slots/free/${id}`).then(this.load);
+    async logout() {
+      // clear auth
+      localStorage.removeItem('token')
+      localStorage.removeItem('role')
+      localStorage.removeItem('username')
+      try { delete axios.defaults.headers.common['Authorization'] } catch(e) { /* ignore */ }
+      this.isLogged = false
+      this.username = ''
+      // notify others
+      window.dispatchEvent(new Event('auth-changed'))
+      this.$router.push({ name: 'Home' })
     }
-  },
-  mounted() {
-    this.load();
   }
-};
+}
 </script>
 
 <style>
-.container {
-  width: 800px;
-  margin: auto;
-  font-family: sans-serif;
+:root{
+  --bg: #f7f9fc;
+  --nav-bg: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #1d4ed8;
+  --card-bg: #ffffff;
+  --free: #16a085; /* free slot */
+  --occupied: #dc2626; /* occupied slot */
+  --btn-bg: #1d4ed8;
+  --btn-text: #ffffff;
+  --overlay: rgba(0,0,0,0.5);
 }
-.total-vehicles {
-  font-size: 18px;
-  margin-bottom: 10px;
-  font-weight: bold;
+.dark{
+  --bg: #0b1020;
+  --nav-bg: #0f1724;
+  --text: #e6eef8;
+  --muted: #9aa9bf;
+  --accent: #60a5fa;
+  --card-bg: #0f1724;
+  --free: #0ea5a3;
+  --occupied: #fb7185;
+  --btn-bg: #60a5fa;
+  --btn-text: #0b1020;
+  --overlay: rgba(2,6,23,0.6);
 }
-.slots {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
-  margin-top: 20px;
-}
-.slot-card {
-  padding: 15px;
-  border-radius: 10px;
-  color: white;
-  text-align: center;
-  transition: transform 0.2s;
-}
-.slot-card:hover {
-  transform: scale(1.05);
-}
-.free {
-  background: #1abc9c;
-}
-.occupied {
-  background: #e74c3c;
-}
-.slot-number {
-  font-size: 18px;
-  font-weight: bold;
-}
-.slot-status,
-.slot-vehicle {
-  margin-top: 5px;
-  font-size: 14px;
-}
-.slot-action {
-  margin-top: 10px;
-}
-input {
-  padding: 5px;
-  width: 70%;
-  border-radius: 5px;
-  border: none;
-  margin-bottom: 5px;
-}
-button {
-  padding: 5px 10px;
-  border-radius: 5px;
-  border: none;
-  cursor: pointer;
-}
+
+.app-root { display:flex; flex-direction:column; min-height:100vh; background:var(--bg); color:var(--text); font-family: sans-serif }
+.nav { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:12px 18px; background:var(--nav-bg); box-shadow:0 1px 0 rgba(0,0,0,0.04); z-index:5 }
+.nav a { color:var(--text); text-decoration:none; font-weight:600; margin-right:12px }
+.nav a.router-link-active { color:var(--accent) }
+.nav-left { display:flex; align-items:center }
+.nav-right { display:flex; align-items:center }
+.theme-switch { display:flex; align-items:center; margin-right:10px }
+.theme-switch input { display:none }
+.switch-label { display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none }
+.switch-label .sun, .switch-label .moon { font-size:14px; opacity:0.9 }
+.switch-label .toggle-knob { width:42px; height:22px; background:linear-gradient(90deg, rgba(0,0,0,0.06), rgba(0,0,0,0.02)); border-radius:20px; position:relative; display:inline-block; transition:background 0.2s }
+.switch-label .toggle-knob::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; background:#fff; border-radius:50%; box-shadow:0 1px 2px rgba(0,0,0,0.12); transition:left 0.18s }
+.theme-switch input:checked + .switch-label .toggle-knob { background: linear-gradient(90deg,var(--accent),#7dd3fc) }
+.theme-switch input:checked + .switch-label .toggle-knob::after { left:23px }
+
+.logout-btn { background:transparent; border:1px solid var(--accent); color:var(--accent); padding:6px 12px; border-radius:8px; cursor:pointer; transition:all 0.18s }
+.logout-btn:hover { background:var(--accent); color:var(--btn-text); transform:translateY(-2px); box-shadow:0 6px 18px rgba(29,78,216,0.12) }
+ .main { padding:20px; flex:1 }
 </style>
+
