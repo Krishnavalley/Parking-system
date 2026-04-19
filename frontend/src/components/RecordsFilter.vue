@@ -34,23 +34,20 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'RecordsFilter',
-  data() {
-    return {
-      form: { vehicle: '', status: 'all', from: '', to: '' }
-    }
-  },
-  methods: {
-    onApply() {
-      this.$emit('apply', { ...this.form })
-    },
-    onReset() {
-      this.form = { vehicle: '', status: 'all', from: '', to: '' }
-      this.$emit('reset')
-    }
-  }
+<script setup>
+import { reactive } from 'vue'
+
+const emit = defineEmits(['apply', 'reset'])
+
+const form = reactive({ vehicle: '', status: 'all', from: '', to: '' })
+
+function onApply() {
+  emit('apply', { ...form })
+}
+
+function onReset() {
+  Object.assign(form, { vehicle: '', status: 'all', from: '', to: '' })
+  emit('reset')
 }
 </script>
 

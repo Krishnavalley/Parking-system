@@ -1,0 +1,101 @@
+============================================
+  PARKING SYSTEM - SETUP GUIDE
+============================================
+
+PREREQUISITES
+-------------
+1. Node.js (v20.19+ or v22.12+)
+   Download: https://nodejs.org
+
+2. MongoDB (Community Edition)
+   Download: https://www.mongodb.com/try/download/community
+   Make sure MongoDB is running before starting the backend.
+
+
+STEP 1: INSTALL BACKEND DEPENDENCIES
+-------------------------------------
+Open a terminal/command prompt and run:
+
+   cd backend
+   npm install
+
+
+STEP 2: INSTALL FRONTEND DEPENDENCIES
+--------------------------------------
+Open another terminal/command prompt and run:
+
+   cd frontend
+   npm install
+
+
+STEP 3: START MONGODB
+---------------------
+Make sure MongoDB is running on your machine.
+Default connection: mongodb://localhost:27017/parking
+
+If MongoDB is installed as a service, it may already be running.
+Otherwise, open a terminal and run:
+
+   mongod
+
+
+STEP 4: START THE BACKEND SERVER
+---------------------------------
+In a terminal, run:
+
+   cd backend
+   npm start
+
+The backend will start on: http://localhost:5000
+
+
+STEP 5: START THE FRONTEND
+---------------------------
+In a separate terminal, run:
+
+   cd frontend
+   npm run dev
+
+The frontend will start on: http://localhost:5173
+
+
+STEP 6: OPEN THE APP
+---------------------
+Open your browser and go to:
+
+   http://localhost:5173
+
+
+DEFAULT LOGIN
+-------------
+Password: admin123
+
+
+OPTIONAL CONFIGURATION
+----------------------
+Create a file named ".env" inside the "backend" folder
+with the following content (change values as needed):
+
+   PORT=5000
+   MONGO_URI=mongodb://localhost:27017/parking
+   JWT_SECRET=your-secret-key
+   RATE_PER_HOUR=20
+   DEFAULT_SLOT_COUNT=50
+   DEFAULT_ADMIN_PASSWORD=admin123
+   CORS_ORIGIN=http://localhost:5173
+
+
+TROUBLESHOOTING
+---------------
+- "Cannot connect to MongoDB"
+  -> Make sure MongoDB is installed and running (mongod).
+
+- "Port already in use"
+  -> Close other apps using port 5000 or 5173,
+     or change the port in the .env file.
+
+- "npm install fails"
+  -> Make sure Node.js is installed: node --version
+  -> Try deleting node_modules folder and running npm install again.
+
+============================================

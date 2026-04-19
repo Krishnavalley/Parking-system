@@ -5,7 +5,7 @@
         <router-link to="/">Home</router-link>
         <router-link to="/entry">Entry</router-link>
         <router-link to="/exit">Exit</router-link>
-        <router-link to="/records">Records</router-link>
+        <router-link to="/dashboard">Dashboard</router-link>
       </div>
       <div class="nav-right">
         <div class="theme-switch">
@@ -16,63 +16,36 @@
             <span class="moon">🌙</span>
           </label>
         </div>
-        <button v-if="isLogged" class="logout-btn" @click="logout">Logout</button>
+        <button v-if="auth.isLoggedIn" class="logout-btn" @click="onLogout">Logout</button>
       </div>
     </nav>
 
     <main class="main">
       <router-view />
     </main>
-    <!-- Footer removed -->
   </div>
 </template>
 
-<script>
-import axios from 'axios'
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
 
-export default {
-  data() {
-    return { isDark: false, isLogged: false, username: '' }
-  },
-  created() {
-    const saved = localStorage.getItem('theme')
-    this.isDark = saved === 'dark' || (saved === null && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
-    this.isLogged = !!localStorage.getItem('token')
-    this.username = localStorage.getItem('username') || ''
-    // listen for auth changes (other tabs or login/logout)
-    window.addEventListener('storage', this.onAuthChange)
-    window.addEventListener('auth-changed', this.onAuthChange)
-  },
-  unmounted() {
-    window.removeEventListener('storage', this.onAuthChange)
-    window.removeEventListener('auth-changed', this.onAuthChange)
-  },
-  methods: {
-    onAuthChange: function() {
-      this.isLogged = !!localStorage.getItem('token')
-      this.username = localStorage.getItem('username') || ''
-      // also react to theme changes from other tabs
-      const saved = localStorage.getItem('theme')
-      this.isDark = saved === 'dark'
-    },
-    toggleTheme() {
-      // v-model already updated `isDark` on click; persist current value
-      localStorage.setItem('theme', this.isDark ? 'dark' : 'light')
-      window.dispatchEvent(new Event('theme-changed'))
-    },
-    async logout() {
-      // clear auth
-      localStorage.removeItem('token')
-      localStorage.removeItem('role')
-      localStorage.removeItem('username')
-      try { delete axios.defaults.headers.common['Authorization'] } catch(e) { /* ignore */ }
-      this.isLogged = false
-      this.username = ''
-      // notify others
-      window.dispatchEvent(new Event('auth-changed'))
-      this.$router.push({ name: 'Home' })
-    }
-  }
+const router = useRouter()
+const auth = useAuthStore()
+
+const saved = localStorage.getItem('theme')
+const isDark = ref(
+  saved === 'dark' || (saved === null && window.matchMedia?.('(prefers-color-scheme: dark)').matches),
+)
+
+function toggleTheme() {
+  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
+}
+
+function onLogout() {
+  auth.logout()
+  router.push({ name: 'Home' })
 }
 </script>
 

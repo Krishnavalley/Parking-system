@@ -2,26 +2,30 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Entry from '../views/Entry.vue'
 import Exit from '../views/Exit.vue'
-import Records from '../views/Records.vue'
+import Dashboard from '../views/Dashboard.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: Home },
-  { path: '/entry', name: 'Entry', component: Entry },
-  { path: '/exit', name: 'Exit', component: Exit }
-  ,{ path: '/records', name: 'Records', component: Records }
+  { path: '/entry', name: 'Entry', component: Entry, meta: { requiresAuth: true } },
+  { path: '/exit', name: 'Exit', component: Exit, meta: { requiresAuth: true } },
+  { path: '/dashboard', name: 'Dashboard', component: Dashboard, meta: { requiresAuth: true, role: 'admin' } },
 ]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
   const role = localStorage.getItem('role')
-  console.log('[router DEBUG] navigating to:', to.name, 'from:', from.name, 'token?', !!token, 'role:', role)
-  // TEMPORARY: allow navigation freely while debugging client routing issues
-  // Keep logs to observe auth state; revert this change after debugging
+
+  if (to.meta.requiresAuth && !token) {
+    return next({ name: 'Home' })
+  }
+  if (to.meta.role && to.meta.role !== role && role !== 'admin') {
+    return next({ name: 'Home' })
+  }
   return next()
 })
 

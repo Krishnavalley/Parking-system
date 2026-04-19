@@ -2,7 +2,9 @@
   <div v-if="visible" class="overlay">
     <div class="modal">
       <h3 class="title">{{ title }}</h3>
-      <div class="body" v-html="message"></div>
+      <div class="body">
+        <slot>{{ message }}</slot>
+      </div>
       <div class="actions">
         <button class="btn secondary" @click="$emit('cancel')">{{ secondaryLabel }}</button>
         <button class="btn primary" @click="$emit('confirm')">{{ primaryLabel }}</button>
@@ -11,17 +13,16 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'ConfirmModal',
-  props: {
-    visible: { type: Boolean, default: false },
-    title: { type: String, default: 'Confirm' },
-    message: { type: String, default: '' },
-    primaryLabel: { type: String, default: 'OK' },
-    secondaryLabel: { type: String, default: 'Cancel' }
-  }
-}
+<script setup>
+defineProps({
+  visible: { type: Boolean, default: false },
+  title: { type: String, default: 'Confirm' },
+  message: { type: String, default: '' },
+  primaryLabel: { type: String, default: 'OK' },
+  secondaryLabel: { type: String, default: 'Cancel' },
+})
+
+defineEmits(['confirm', 'cancel'])
 </script>
 
 <style scoped>

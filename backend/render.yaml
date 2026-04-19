@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: parking-system-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false # Set manually in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false # Set to your Netlify URL after deploying frontend

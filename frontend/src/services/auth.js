@@ -1,3 +1,5 @@
+// Auth helpers are now centralized in stores/auth.js (Pinia).
+// This module is kept for backward compatibility but delegates to the store.
 import api from './api'
 
 export function setAuth(token, role, username) {
@@ -13,7 +15,7 @@ export function clearAuth() {
   localStorage.removeItem('token')
   localStorage.removeItem('role')
   localStorage.removeItem('username')
-  try { delete api.defaults.headers.common['Authorization'] } catch(e) {}
+  delete api.defaults.headers.common['Authorization']
 }
 
 export function getToken() { return localStorage.getItem('token') }
